@@ -10,16 +10,24 @@ interface FileToDownload {
 export const downloadFilesAsZip = async (files: FileToDownload[], zipName: string) => {
   const zip = new JSZip();
 
-  // For this demo/mock environment, we are using placeholder content
-  // In production, we'd fetch actual blobs
-  files.forEach((file) => {
-    const content = `This is a placeholder content for ${file.name}.\nOriginal URL: ${file.download_url}`;
-    zip.file(file.name, content);
-  });
-
   try {
-    const content = await zip.generateAsync({ type: 'blob' });
-    saveAs(content, `${zipName}.zip`);
+    const fetchPromises = files.map(async (file) => {
+      try {
+        const response = await fetch(file.download_url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const blob = await response.blob();
+        zip.file(file.name, blob);
+      } catch (err) {
+        console.error(`Failed to fetch ${file.name}:`, err);
+        // Include an error file so the user knows this file failed
+        zip.file(`${file.name}.error.txt`, `Failed to download: ${file.download_url}\nError: ${err}`);
+      }
+    });
+
+    await Promise.all(fetchPromises);
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    saveAs(zipBlob, `${zipName}.zip`);
   } catch (error) {
     console.error('Failed to generate zip file:', error);
     toast.error('Failed to generate zip file');
