@@ -32,3 +32,8 @@ dist-ssr
 
 # Vercel
 .vercel
+
+# Local Media and Documents
+*.pdf
+Sem 6/
+
