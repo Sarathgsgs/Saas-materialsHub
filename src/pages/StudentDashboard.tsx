@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { mockFiles } from '../api/mockData';
+
 
 export const StudentDashboard: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -160,7 +160,7 @@ export const StudentDashboard: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {mockFiles.slice(0, 4).map((file) => (
+                      {([] as any[]).slice(0, 4).map((file: any) => (
                         <tr key={file.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">

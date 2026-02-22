@@ -1,8 +1,6 @@
 import { supabase } from '../lib/supabase';
 
 export const getAdminStats = async () => {
-    if (!supabase) return { data: { students: 0, teachers: 0, materials: 0, pending: 0 }, error: null };
-
     const results = await Promise.allSettled([
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'student'),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'teacher'),
@@ -21,7 +19,6 @@ export const getAdminStats = async () => {
 };
 
 export const getTeachers = async () => {
-    if (!supabase) return { data: [], error: null };
     try {
         const { data, error } = await supabase
             .from('profiles')
@@ -38,7 +35,6 @@ export const getTeachers = async () => {
 };
 
 export const approveUser = async (userId: string) => {
-    if (!supabase) return { error: null };
     return await (supabase as any)
         .from('profiles')
         .update({ is_approved: true })
@@ -46,7 +42,6 @@ export const approveUser = async (userId: string) => {
 };
 
 export const deleteUser = async (userId: string) => {
-    if (!supabase) return { error: null };
     return await supabase
         .from('profiles')
         .delete()
@@ -54,7 +49,6 @@ export const deleteUser = async (userId: string) => {
 };
 
 export const getPendingMaterials = async () => {
-    if (!supabase) return { data: [], error: null };
     try {
         const { data, error } = await supabase
             .from('files')

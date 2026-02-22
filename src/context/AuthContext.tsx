@@ -26,24 +26,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!supabase) {
-      // Mock Auth Check
-      const storedUser = localStorage.getItem('mock_user');
-      if (storedUser) {
-        const u = JSON.parse(storedUser);
-        setUser(u);
-        setRole(u.user_metadata?.role || 'student');
-        setSession({ user: u } as Session);
-      }
-      setLoading(false);
-      return;
-    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        supabase!.from('profiles').select('role, is_approved').eq('id', session.user.id).single()
+        supabase.from('profiles').select('role, is_approved').eq('id', session.user.id).single()
           .then(({ data }) => {
             if (data) {
               setRole(data.role as Role);
@@ -58,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        supabase!.from('profiles').select('role, is_approved').eq('id', session.user.id).single()
+        supabase.from('profiles').select('role, is_approved').eq('id', session.user.id).single()
           .then(({ data }) => {
             if (data) {
               setRole(data.role as Role);
@@ -76,23 +64,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string, roleArg: Role = 'student') => {
-    if (!supabase) {
-      const mockUser = {
-        id: 'mock-user-id',
-        email,
-        user_metadata: { role: roleArg, full_name: 'Mock User', dept: 'Mock Dept' },
-        app_metadata: {},
-        aud: 'authenticated',
-        created_at: new Date().toISOString()
-      };
-      localStorage.setItem('mock_user', JSON.stringify(mockUser));
-      setUser(mockUser as any);
-      setRole(roleArg);
-      setIsApproved(true);
-      setSession({ user: mockUser } as any);
-      toast.success(`Logged in as ${roleArg} (Mock)`);
-      return;
-    }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
@@ -108,10 +79,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signUp = async (email: string, password: string, metadata: { full_name: string; dept: string; role: Role }) => {
-    if (!supabase) {
-      toast.success('Sign up simulated (Mock)');
-      return;
-    }
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -145,14 +112,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    if (!supabase) {
-      localStorage.removeItem('mock_user');
-      setUser(null);
-      setRole(null);
-      setSession(null);
-      toast.success('Logged out (Mock)');
-      return;
-    }
     await supabase.auth.signOut();
     setRole(null);
     toast.success('Logged out');
