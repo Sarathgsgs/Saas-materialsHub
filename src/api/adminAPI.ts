@@ -63,3 +63,20 @@ export const getPendingMaterials = async () => {
         return { data: [], error: err };
     }
 };
+
+export const getPendingUsers = async () => {
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('is_approved', false)
+            .neq('role', 'admin')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return { data: data || [], error: null };
+    } catch (err: any) {
+        console.error('getPendingUsers error:', err);
+        return { data: [], error: err };
+    }
+};

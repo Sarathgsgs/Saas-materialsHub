@@ -1,11 +1,17 @@
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { toast } from 'react-hot-toast';
+import { supabase } from '../lib/supabase';
 
 interface FileToDownload {
   name: string;
-  download_url: string;
+  path: string;
 }
+
+const getPublicUrl = (path: string): string => {
+  const { data } = supabase.storage.from('materials').getPublicUrl(path);
+  return data.publicUrl;
+};
 
 export const downloadFilesAsZip = async (files: FileToDownload[], zipName: string) => {
   const zip = new JSZip();
@@ -13,14 +19,14 @@ export const downloadFilesAsZip = async (files: FileToDownload[], zipName: strin
   try {
     const fetchPromises = files.map(async (file) => {
       try {
-        const response = await fetch(file.download_url);
+        const url = getPublicUrl(file.path);
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const blob = await response.blob();
         zip.file(file.name, blob);
       } catch (err) {
         console.error(`Failed to fetch ${file.name}:`, err);
-        // Include an error file so the user knows this file failed
-        zip.file(`${file.name}.error.txt`, `Failed to download: ${file.download_url}\nError: ${err}`);
+        zip.file(`${file.name}.error.txt`, `Failed to download: ${file.path}\nError: ${err}`);
       }
     });
 
@@ -34,14 +40,16 @@ export const downloadFilesAsZip = async (files: FileToDownload[], zipName: strin
   }
 };
 
-export const downloadFile = async (url: string, fileName: string) => {
+export const downloadFile = async (path: string, fileName: string) => {
   try {
+    const url = getPublicUrl(path);
     const response = await fetch(url);
     const blob = await response.blob();
     saveAs(blob, fileName);
   } catch (error) {
     console.error('Download failed:', error);
-    // Fallback: simple link click (might still open in new tab for CORS)
+    // Fallback: simple link click
+    const url = getPublicUrl(path);
     const link = document.createElement('a');
     link.href = url;
     link.setAttribute('download', fileName);

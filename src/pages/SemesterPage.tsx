@@ -87,10 +87,15 @@ export const SemesterPage: React.FC = () => {
               <button onClick={() => document.getElementById('subjects-grid')?.scrollIntoView({ behavior: 'smooth' })} className="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-xl font-bold shadow-xl shadow-primary/20 transition-transform active:scale-95">
                 Explore Materials
               </button>
-              <button className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-8 py-4 rounded-xl font-bold transition-transform active:scale-95 flex items-center gap-2">
-                <span className="material-symbols-outlined text-lg">download</span>
-                Course Syllabus
-              </button>
+              {id === '6' && (
+                <button
+                  onClick={() => window.open('https://zinflixritqtulboiqnb.supabase.co/storage/v1/object/public/materials/sem-6/timetable.pdf', '_blank')}
+                  className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-8 py-4 rounded-xl font-bold transition-transform active:scale-95 flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-lg">calendar_today</span>
+                  Timetable
+                </button>
+              )}
             </div>
           </div>
         </div>

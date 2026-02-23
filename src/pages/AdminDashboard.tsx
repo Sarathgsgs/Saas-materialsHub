@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getAdminStats, getTeachers, approveUser, deleteUser, getPendingMaterials } from '../api/adminAPI';
+import { getAdminStats, getTeachers, approveUser, deleteUser, getPendingMaterials, getPendingUsers } from '../api/adminAPI';
 import { toast } from 'react-hot-toast';
+import { MaterialUploadForm } from '../components/MaterialUploadForm';
 
 export const AdminDashboard: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -10,19 +11,23 @@ export const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState({ students: 0, teachers: 0, materials: 0, pending: 0 });
   const [teachers, setTeachers] = useState<any[]>([]);
   const [pendingMaterials, setPendingMaterials] = useState<any[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsRes, teachersRes, materialsRes] = await Promise.all([
+      const [statsRes, teachersRes, materialsRes, pendingUsersRes] = await Promise.all([
         getAdminStats(),
         getTeachers(),
-        getPendingMaterials()
+        getPendingMaterials(),
+        getPendingUsers()
       ]);
       if (statsRes.data) setStats(statsRes.data);
       if (teachersRes.data) setTeachers(teachersRes.data);
       if (materialsRes.data) setPendingMaterials(materialsRes.data);
+      if (pendingUsersRes.data) setPendingUsers(pendingUsersRes.data);
     } catch (error: any) {
       toast.error('Failed to fetch data');
     } finally {
@@ -176,7 +181,10 @@ export const AdminDashboard: React.FC = () => {
                 <span className="material-symbols-outlined text-lg">download</span>
                 Export Data
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+              <button
+                onClick={() => setIsUploadModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+              >
                 <span className="material-symbols-outlined text-lg">add</span>
                 Add New Material
               </button>
@@ -260,8 +268,80 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Content & Teacher Management */}
+          {/* Content, User Approvals & Teacher Management */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            {/* Pending Account Approvals Section */}
+            <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h4 className="font-bold text-lg">Pending Account Approvals</h4>
+                  {pendingUsers.length > 0 && (
+                    <span className="bg-amber-100 text-amber-700 text-[10px] font-black uppercase px-2 py-0.5 rounded">{pendingUsers.length} Pending</span>
+                  )}
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                    <tr>
+                      <th className="px-6 py-4">Name</th>
+                      <th className="px-6 py-4">Email</th>
+                      <th className="px-6 py-4">Role</th>
+                      <th className="px-6 py-4">Department</th>
+                      <th className="px-6 py-4">Registered</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {pendingUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-xs">
+                              {u.full_name?.[0]?.toUpperCase() || '?'}
+                            </div>
+                            <span className="text-sm font-medium">{u.full_name || 'Unknown'}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500">{u.email}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded ${u.role === 'teacher' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                            {u.role?.charAt(0).toUpperCase() + u.role?.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500">{u.department || 'N/A'}</td>
+                        <td className="px-6 py-4 text-sm text-slate-500">{new Date(u.created_at).toLocaleDateString()}</td>
+                        <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleApprove(u.id)}
+                            className="text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 p-1.5 rounded-lg transition-colors"
+                            title="Approve User"
+                          >
+                            <span className="material-symbols-outlined text-lg">check_circle</span>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(u.id)}
+                            className="text-slate-400 hover:text-red-500 transition-colors p-1.5 rounded-lg"
+                            title="Reject & Delete"
+                          >
+                            <span className="material-symbols-outlined text-lg">cancel</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {pendingUsers.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                          <span className="material-symbols-outlined text-3xl text-slate-300 mb-2 block">verified</span>
+                          No pending account approvals.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
             {/* Teacher Directory Section */}
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
               <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -436,6 +516,25 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Upload Modal Overlay */}
+      {isUploadModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setIsUploadModalOpen(false)}
+          ></div>
+          <div className="relative w-full max-w-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+            <MaterialUploadForm
+              onSuccess={() => {
+                setIsUploadModalOpen(false);
+                fetchData();
+              }}
+              onCancel={() => setIsUploadModalOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

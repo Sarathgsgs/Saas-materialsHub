@@ -63,17 +63,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string, roleArg: Role = 'student') => {
+  const signIn = async (email: string, password: string, _roleArg: Role = 'student') => {
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
-
-    // Check approval
-    const { data: profile } = await supabase.from('profiles').select('is_approved').eq('id', data.user.id).single();
-    if (profile && !profile.is_approved && roleArg !== 'admin') {
-      await supabase.auth.signOut();
-      throw new Error('Your account is pending administrator approval.');
-    }
 
     toast.success('Signed in successfully!');
   };

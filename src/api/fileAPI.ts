@@ -26,16 +26,22 @@ export const uploadFile = async (
   metadata: {
     unit_id: string;
     subject_id: string;
+    subject_code: string;
     name: string;
     uploaded_by: string;
   }
 ) => {
-  const fakeUrl = `https://mock-cloudinary.com/${uuidv4()}/${file.name}`;
-  const fakePublicId = `materials-hub/${metadata.subject_id}/${metadata.unit_id}/${uuidv4()}`;
+  const uniqueFolder = uuidv4();
+  const storagePath = `${metadata.subject_code}/${uniqueFolder}/${file.name}`;
 
-  // Real implementation would upload to Cloudinary here first
-  // Then insert into Supabase
+  // 1. Upload to Supabase Storage
+  const { error: uploadError } = await supabase.storage
+    .from('materials')
+    .upload(storagePath, file);
 
+  if (uploadError) throw uploadError;
+
+  // 2. Insert metadata into database
   return await supabase.from('files').insert([{
     unit_id: metadata.unit_id,
     subject_id: metadata.subject_id,
@@ -43,10 +49,9 @@ export const uploadFile = async (
     original_name: file.name,
     size: file.size,
     file_type: file.type,
-    download_url: fakeUrl, // In real app, this comes from Cloudinary response
-    cloudinary_public_id: fakePublicId,
+    path: storagePath,
     uploaded_by: metadata.uploaded_by
-  }] as any).select().single();
+  }]).select().single();
 };
 
 export const deleteFile = async (id: string) => {
@@ -60,4 +65,9 @@ export const renameFile = async (id: string, newName: string) => {
     .eq('id', id)
     .select()
     .single();
+};
+
+export const getFilePublicUrl = (path: string): string => {
+  const { data } = supabase.storage.from('materials').getPublicUrl(path);
+  return data.publicUrl;
 };

@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { Database } from '../types/database.types';
 import { downloadFilesAsZip, downloadFile } from '../utils/downloadHelper';
+import { getFilePublicUrl } from '../api/fileAPI';
 
 type FileData = Database['public']['Tables']['files']['Row'];
 type UnitData = Database['public']['Tables']['units']['Row'];
@@ -158,13 +159,13 @@ export const UnitPage: React.FC = () => {
                     </button>
                   )}
                   <button
-                    onClick={() => window.open(file.download_url, '_blank')}
+                    onClick={() => window.open(getFilePublicUrl(file.path), '_blank')}
                     className="px-4 py-2 text-sm font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
                     Preview
                   </button>
                   <button
-                    onClick={() => downloadFile(file.download_url, file.name)}
+                    onClick={() => downloadFile(file.path, file.name)}
                     className="px-4 py-2 text-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2"
                   >
                     <span className="material-symbols-outlined text-sm">download</span>

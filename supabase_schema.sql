@@ -33,12 +33,13 @@ CREATE TABLE IF NOT EXISTS files (
   original_name TEXT NOT NULL,
   size BIGINT NOT NULL,
   file_type TEXT NOT NULL,
-  download_url TEXT NOT NULL,
-  cloudinary_public_id TEXT NOT NULL,
+  path TEXT NOT NULL,
   uploaded_by TEXT NOT NULL,
   upload_date TIMESTAMPTZ DEFAULT NOW(),
   views INTEGER DEFAULT 0,
-  downloads INTEGER DEFAULT 0
+  downloads INTEGER DEFAULT 0,
+  download_url TEXT,
+  cloudinary_public_id TEXT
 );
 
 -- Profiles Table

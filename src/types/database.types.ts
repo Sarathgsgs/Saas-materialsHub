@@ -111,12 +111,13 @@ export interface Database {
           original_name: string
           size: number
           file_type: string
-          download_url: string
-          cloudinary_public_id: string
+          path: string
           uploaded_by: string
           upload_date: string
           views: number
           downloads: number
+          download_url?: string | null
+          cloudinary_public_id?: string | null
         }
         Insert: {
           id?: string
@@ -126,12 +127,13 @@ export interface Database {
           original_name: string
           size: number
           file_type: string
-          download_url: string
-          cloudinary_public_id: string
+          path: string
           uploaded_by: string
           upload_date?: string
           views?: number
           downloads?: number
+          download_url?: string | null
+          cloudinary_public_id?: string | null
         }
         Update: {
           id?: string
@@ -141,12 +143,13 @@ export interface Database {
           original_name?: string
           size?: number
           file_type?: string
-          download_url?: string
-          cloudinary_public_id?: string
+          path?: string
           uploaded_by?: string
           upload_date?: string
           views?: number
           downloads?: number
+          download_url?: string | null
+          cloudinary_public_id?: string | null
         }
         Relationships: [
           {
